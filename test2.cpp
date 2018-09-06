@@ -49,30 +49,28 @@ std::string vertexShader = R"__(
 in vec4 vPosition;
 in vec4 vColor;
 
-out vec4 color;
+out vec3 fColor;
 
 uniform mat4 mvpMatrix;
 
 void main() {
-   //color = vColor;
-   color = vec4(1,1,1,1); //debugging
-   //gl_Position = mvpMatrix * vPosition;
-   //vec4 pos2 = vec4(.3,.3,.3,0);
-   gl_Position = vPosition + pos2;
+   fColor = vec3(1,0,1); //debugging
+   gl_Position = vPosition;
 }
 )__";
 
 std::string fragmentShader = R"__(
 #version 330 core
 
-//in vec4 color;
+in vec3 fColor;
 
-//out vec3 fColor;
+out vec3 color;
 
 void main() {
    //fColor = vec3(color);
-   //fColor = vec3(1,1,1);
-   gl_FragColor = vec4(.4,1,0,1);
+   color = fColor;
+//   gl_FragColor = vec4(.4,0,0,1);
+   
 }
 
 )__";
