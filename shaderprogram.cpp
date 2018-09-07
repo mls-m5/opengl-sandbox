@@ -144,13 +144,13 @@ void StandardShaderProgram::disable() {
 	}
 }
 
-void ShaderProgram::useProgram() {
+void ShaderProgram::use() {
 	if (_program) {
 		glUseProgram(_program);
 	}
 }
 
-void ShaderProgram::unUseProgram() {
+void ShaderProgram::unuse() {
 	glUseProgram(0);
 }
 

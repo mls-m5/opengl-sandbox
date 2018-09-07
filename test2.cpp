@@ -69,6 +69,7 @@ out vec3 color;
 void main() {
    //fColor = vec3(color);
    color = fColor;
+   //color = vec3(1,1,1);
 //   gl_FragColor = vec4(.4,0,0,1);
    
 }
@@ -98,7 +99,7 @@ void init(void)
 	glCall(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices),
 			vertices, GL_STATIC_DRAW));
 	shaderProgram.initProgram(vertexShader, fragmentShader);
-	shaderProgram.useProgram();
+	shaderProgram.use();
 	glCall(glVertexAttribPointer(vPosition, 2, GL_FLOAT,
 			false, 0, BUFFER_OFFSET(0)));
 	glCall(glEnableVertexAttribArray(vPosition));
@@ -113,6 +114,7 @@ void render() {
 	glCall(glBindVertexArray (VAOs[Triangles]));
 	glCall(glDrawArrays(GL_TRIANGLES, 0, NumVertices));
 	glCall(glFlush());
+
 }
 
 
@@ -134,6 +136,8 @@ int main (int ArgCount, char **Args)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
 
 	auto windowFlags = SDL_WINDOW_OPENGL;

@@ -21,8 +21,12 @@ public:
 	void initProgram(std::string vertexCode, std::string fragmentCode);
 	void loadShaderFromFile(std::string vertexFile, std::string fragmentFile);
 
-	void useProgram();
-	void unUseProgram();
+	inline void useProgram() __attribute__ ((deprecated)) {
+		use();
+	}
+
+	void use();
+	void unuse();
 
 	GLuint getProgram() { return _program; };
 	GLint getUniform( char const* name );
@@ -95,5 +99,8 @@ static int checkGlError(const char* op, bool throwError = false) {
     return ret;
 }
 
-#define glCall(call) call; if(checkGlError(#call, true)) {cout << "at" << __FILE__ << ":" << __LINE__ << endl;};
-
+#ifdef NDEBUG
+#define glCall(call) call;
+#else
+#define glCall(call) call; if(checkGlError(#call, true)) {std::cout << "at" << __FILE__ << ":" << __LINE__ << std::endl;};
+#endif

@@ -17,14 +17,18 @@ exit
 
 using namespace std;
 
-int main (int ArgCount, char **Args)
+int main (int argv, char **args)
 {
 	auto width = 1000;
 	auto height = 1000;
 
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
 	auto windowFlags = SDL_WINDOW_OPENGL;
 	auto window = shared_ptr<SDL_Window>(SDL_CreateWindow(
-			"Opengl playground", 0, 0, width, height, windowFlags),
+			"Opengl playground - test1 - empty window", 0, 0, width, height, windowFlags),
 			SDL_DestroyWindow);
 
 	assert(window);

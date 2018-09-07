@@ -1,6 +1,6 @@
 #if 0
 
-g++ $0 shaderprogram.cpp -std=c++11 -g -o test3 -lSDL2 -lGL  -fmax-errors=5 -I../obj-advanced-loader/include/
+g++ $0 shaderprogram.cpp -std=c++11 -g -o test5 -lSDL2 -lGL  -fmax-errors=5 -I../obj-advanced-loader/include/
 
 exit
 #endif
@@ -26,6 +26,7 @@ exit
 
 #include <SDL2/SDL.h>
 
+#include <iostream>
 #include "matrix.h"
 #include "shaderprogram.h"
 
@@ -77,17 +78,60 @@ static const GLfloat g_vertex_buffer_data[] = {
    0.0f,  1.0f, 0.0f,
 };
 
-GLuint vertexbuffer;
-ShaderProgram program;
+
+static GLuint indices[] = {
+	0, 1, 2
+};
+
+static GLuint vertexbuffer;
+static GLuint elementBuffer;
+static ShaderProgram program;
+static GLuint vertexArray;
 
 void init() {
+	//This is nessesary if you want to use openGL 3
+	glCall(glGenVertexArrays(1, &vertexArray));
+	glCall(glBindVertexArray(vertexArray));
+
+
+
 	// This will identify our vertex buffer
 	// Generate 1 buffer, put the resulting identifier in vertexbuffer
-	glGenBuffers(1, &vertexbuffer);
+	glCall(glGenBuffers(1, &vertexbuffer));
 	// The following commands will talk about our 'vertexbuffer' buffer
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	glCall(glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer));
 	// Give our vertices to OpenGL.
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+	glCall(glBufferData(
+			GL_ARRAY_BUFFER,
+			sizeof(g_vertex_buffer_data),
+			g_vertex_buffer_data,
+			GL_STATIC_DRAW));
+
+	//Same thing with indices
+	glCall(glGenBuffers(1, &elementBuffer));
+	glCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer));
+	glCall(glBufferData(
+			GL_ELEMENT_ARRAY_BUFFER,
+			sizeof(indices),
+			indices,
+			GL_STATIC_DRAW
+	));
+
+	glCall(glEnableVertexAttribArray(0));
+
+	glCall(glVertexAttribPointer(
+	   0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+	   3,                  // size
+	   GL_FLOAT,           // type
+	   GL_FALSE,           // normalized?
+	   0,                  // stride
+	   (void*)0            // array buffer offset
+	));
+
+
+
+	glCall(glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer));
+	glCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer));
 
 	program.initProgram(vertexShader, fragmentShader);
 }
@@ -95,25 +139,18 @@ void init() {
 //Rendering function
 void render(){
 	static float x = 0;
-//	drawSquare(Vec(.1 + x, 50, 1), 20 + x * 2, 100,100, DRAW_STYLE_FILLED);
 	x += 20;
 
 	program.use();
 
 	// 1st attribute buffer : vertices
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glVertexAttribPointer(
-	   0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-	   3,                  // size
-	   GL_FLOAT,           // type
-	   GL_FALSE,           // normalized?
-	   0,                  // stride
-	   (void*)0            // array buffer offset
-	);
+//	glCall(glEnableVertexAttribArray(vertexArray));
+	glCall(glBindVertexArray(vertexArray));
+
+
 	// Draw the triangle !
-	glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
-	glDisableVertexAttribArray(0);
+	glCall(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
+//	glCall(glDisableVertexAttribArray(0));
 
 	program.unuse();
 }
@@ -131,8 +168,8 @@ int main(int argc, char *argv[])
     /* Request opengl 3.2 context.
      * SDL doesn't have the ability to choose which profile at this time of writing,
      * but it should default to the core profile */
-//    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-//    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2); //This prevents the rendering function from rendering anything of some reason
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
 //    Turn on double buffering with a 24bit Z buffer.
 //    You may need to change this to 16 or 32 for your system
@@ -141,7 +178,7 @@ int main(int argc, char *argv[])
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     // Create our window centered at 512x512 resolution
-    mainwindow = SDL_CreateWindow("sdl-window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    mainwindow = SDL_CreateWindow("sdl-window - test3", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         512, 512, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (!mainwindow) /* Die if creation failed */
         sdldie("Unable to create window");
