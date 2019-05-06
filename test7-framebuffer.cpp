@@ -26,6 +26,29 @@ exit
 using namespace std;
 
 namespace GL {
+	template <typename T>
+	GLenum getType();
+
+	template <>
+	GLenum getType<double>() {
+		return GL_DOUBLE;
+	}
+
+	template <>
+	GLenum getType<float>() {
+		return GL_FLOAT;
+	}
+
+	template <>
+	GLenum getType<GLuint>() {
+		return GL_UNSIGNED_INT;
+	}
+
+	template <>
+	GLenum getType<GLint>() {
+		return GL_INT;
+	}
+
 	class Window {
 	public:
 		Window (const string &title, int x, int y, int w, int h, Uint32 flags) {
@@ -84,9 +107,41 @@ namespace GL {
 
 	class VertexBufferObject {
 	public:
-		VertexBufferObject(GLenum target): target(target) {
+		// GL_ARRAY_BUFFER or GL_ELEMENT_ARRAY_BUFFER is the most common
+		// More info on https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glBufferData.xhtml
+		VertexBufferObject(GLenum target = GL_ARRAY_BUFFER): target(target) {
 			glCall(glGenBuffers(1, &id));
+			bind();
 		}
+
+		// Shorthand version
+		// if size == 0 it will be calculated from the size of the vector
+		// index is the index in the shader program
+		// size is the size of each element eg 3 for 3d-position
+		// stride is how far it is between each element in bytes
+		// start is the starting position in bytes
+		template <class T>
+		VertexBufferObject(
+				const std::vector<T> &data,
+				GLuint index, GLuint size,
+				GLuint stride = 0, size_t start = 0,
+				GLenum target = GL_ARRAY_BUFFER,
+				GLenum usage = GL_STATIC_DRAW):
+				VertexBufferObject(target) {
+			setData(data, usage);
+			attribPointer(index, size, getType<T>(), false, stride, (void*)start);
+		}
+
+		// A specialized version for element buffers
+		VertexBufferObject(const std::vector<GLuint> &indices): VertexBufferObject(GL_ELEMENT_ARRAY_BUFFER){
+			setData(indices);
+		}
+
+		VertexBufferObject(VertexBufferObject &&other): id(other.id), target(other.target) {
+			other.id = 0;
+		}
+
+		VertexBufferObject(const VertexBufferObject &) = delete;
 
 		~VertexBufferObject() {
 			glCall(glGenBuffers(1, &id));
@@ -102,6 +157,11 @@ namespace GL {
 
 		// Set attribute pointer
 		// and enable it if it is not GL_ELEMENT_ARRAY_BUFFER
+		// Index is the index in the shader program
+		// size is the total number of bytes for each element eg. 3 for a 3d position
+		// type is the data type eg. GL_FLOAT or GL_DOUBLE
+		// stride is if you have some other format like and needs the size of each element to be bigger
+		// pointer is the offset of the first element, probably used in combination with stride
 		void attribPointer(
 				GLuint index,
 				GLint size,
@@ -374,22 +434,27 @@ int main(int argc, char **argv) {
     GL::Context context(window);
     checkSDLError(to_string(__LINE__));
 
-    // For rendering on the screen
+
+
+
+
+    // For rendering the world -----------------------------------------------------------
 	GL::VertexArrayObject vao;
+	{
+		GL::VertexBufferObject vertexBuffer(vertices, 0, 3);
 
-	GL::VertexBufferObject vertexBuffer(GL_ARRAY_BUFFER);
-	vertexBuffer.setData(vertices);
-	vertexBuffer.attribPointer(0, 3, GL_FLOAT, false);
+		GL::VertexBufferObject elementBuffer(indices);
+	}
 
-
-	GL::VertexBufferObject elementBuffer(GL_ELEMENT_ARRAY_BUFFER);
-	elementBuffer.setData(indices);
-	//elementBuffer.attribPointer(0, 0, GL_FLOAT, false);
-
-	ShaderProgram plainProgram(plainShader::vertex, plainShader::fragment);
-	plainProgram.use();
+	ShaderProgram worldProgram(plainShader::vertex, plainShader::fragment);
+	worldProgram.use();
 
 	vao.unbind();
+
+	// -------------------------- end of section ------------------------------------------
+
+	// -- Rendering to the screen
+	VertexArrayObject screenVao;
 
 
 //	// World rendering
