@@ -342,7 +342,7 @@ R"_(
 out vec4 fragColor;
 
 void main() {
-	fragColor = vec4(1, 1, 1, 1);
+	fragColor = vec4(1, .4, 1, 1);
 }
 
 )_";
@@ -383,6 +383,7 @@ uniform sampler2D screenTexture;
 
 void main()
 { 
+//    FragColor = vec4(vec3(1 - texture(screenTexture, TexCoords)), 1);
     FragColor = texture(screenTexture, TexCoords);
 }
 
@@ -395,6 +396,13 @@ vector<float> vertices = {
 		1, 0, 0,
 		1, 1, 0,
 		0, 1, 0,
+};
+
+vector<float> objectVertices = {
+		.1, .4, 0,
+		.5, .1, 0,
+		5, .5, 0,
+		.1, .5, 0,
 };
 
 vector<float> texCoords = {
@@ -424,7 +432,7 @@ int main(int argc, char **argv) {
 
     int width = 800, height = 600;
 
-    GL::Window window("Hej", 0, 0, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    GL::Window window("Hej", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
     if (!window) {
     	cerr << "could not create main window" << endl;
@@ -439,35 +447,43 @@ int main(int argc, char **argv) {
 
 
     // For rendering the world -----------------------------------------------------------
+	ShaderProgram worldProgram(plainShader::vertex, plainShader::fragment);
 	GL::VertexArrayObject vao;
 	{
-		GL::VertexBufferObject vertexBuffer(vertices, 0, 3);
+		GL::VertexBufferObject vertexBuffer(objectVertices, 0, 3);
 
 		GL::VertexBufferObject elementBuffer(indices);
 	}
 
-	ShaderProgram worldProgram(plainShader::vertex, plainShader::fragment);
 	worldProgram.use();
 
 	vao.unbind();
 
-	// -------------------------- end of section ------------------------------------------
 
-	// -- Rendering to the screen
-	VertexArrayObject screenVao;
+	// -------------------------- define frame buffer object ------------------------------------------
 
-
-//	// World rendering
-//	VertexArrayObject worldVao;
-//	ShaderProgram worldShader(plainShader::vertex, plainShader::fragment);
-//	plainProgram.use();
-
-
-	int w = 300, h = 200;
+	int w = 30, h = 20;
 	FrameBufferObject fbo(w, h);
 	TextureAttachment texAttachment(w, h);
 	DepthBufferAttachment depthAttachment(w, h);
 	fbo.unBind();
+
+	ShaderProgram screenProgram(texturedShader::vertex, texturedShader::fragment);
+	// -- Rendering to the screen ---------------------------------------------
+	VertexArrayObject screenVao;
+	{
+		GL::VertexBufferObject vertexBuffer(vertices, 0, 3);
+		GL::VertexBufferObject textureCoordinates(texCoords, 1, 2);
+		GL::VertexBufferObject elementBuffer(indices);
+	}
+
+	screenProgram.use();
+	texAttachment.bind();
+
+	screenVao.unbind();
+
+	// --------------------------------------------------------------------------------
+
 
 	SDL_GL_SetSwapInterval(1);
 
@@ -494,18 +510,29 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		// First pass
 
-		fbo.unBind();
-//		fbo.bind();
 		vao.bind();
-		glClearColor(0, 0, .1, 1);
+		fbo.bind();
+		glClearColor(0, .4, 1, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
 
+		worldProgram.use();
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-//		fbo.unBind();
 
+		// Render to screen
+		screenVao.bind();
+		fbo.unBind(width, height); // Draw to screen
 
+		glClearColor(0, 0, 1, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+
+		texAttachment.bind();
+		depthAttachment.bind();
+
+		screenProgram.use();
+		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
 		window.swap();
 	}
