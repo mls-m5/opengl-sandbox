@@ -1,6 +1,6 @@
 #if 0
 
-g++ $0 shaderprogram.cpp -std=c++11 -g -o test5 -lSDL2 -lGL  -fmax-errors=5 -I../obj-advanced-loader/include/
+g++ $0 shaderprogram.cpp -std=c++11 -g -o test5 -lSDL2 -lGL  -fmax-errors=5 -Imatengine/
 
 exit
 #endif
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     // Create our window centered at 512x512 resolution
-    mainwindow = SDL_CreateWindow("sdl-window - test3", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    mainwindow = SDL_CreateWindow("sdl-window - test5", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         512, 512, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (!mainwindow) /* Die if creation failed */
         sdldie("Unable to create window");

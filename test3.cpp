@@ -1,6 +1,6 @@
 #if 0
 
-g++ $0 shaderprogram.cpp -std=c++11 -g -o test3 -lSDL2 -lGL  -fmax-errors=5 -I../obj-advanced-loader/include/
+g++ $0 shaderprogram.cpp -std=c++11 -g -o test3 -lSDL2 -lGL  -fmax-errors=5 -Imatengine/
 
 exit
 #endif

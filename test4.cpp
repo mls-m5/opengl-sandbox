@@ -23,11 +23,10 @@ exit
 
 #include <GL/gl.h>
 #include <GL/glext.h>
-#include <glm/matrix.hpp>
 
 #include <SDL2/SDL.h>
 
-#include "matrix.h"
+#include "matengine/matrix.h"
 #include "shaderprogram.h"
 
 
@@ -116,7 +115,7 @@ void render(){
 //	drawSquare(Vec(.1 + x, 50, 1), 20 + x * 2, 100,100, DRAW_STYLE_FILLED);
 	x += 20;
 
-	program.useProgram();
+	program.use();
 
 	// 1st attribute buffer : vertices
 	glEnableVertexAttribArray(0);
@@ -133,7 +132,7 @@ void render(){
 	glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
 	glDisableVertexAttribArray(0);
 
-	program.unUseProgram();
+	program.unuse();
 }
 
 

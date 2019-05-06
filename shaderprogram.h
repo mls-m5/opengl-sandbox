@@ -10,6 +10,7 @@
 #include "common-gl.h"
 
 #include <string>
+#include <stdexcept>
 
 class ShaderProgram {
 public:
@@ -17,9 +18,9 @@ public:
 		this->_program = s._program;
 	}
 	ShaderProgram();
-	ShaderProgram(std::string vertexCode, std::string fragmentCode);
-	void initProgram(std::string vertexCode, std::string fragmentCode);
-	void loadShaderFromFile(std::string vertexFile, std::string fragmentFile);
+	ShaderProgram(const std::string &vertexCode, const std::string &fragmentCode);
+	void initProgram(const std::string &vertexCode, const std::string &fragmentCode);
+	void loadShaderFromFile(const std::string &vertexFile, const std::string &fragmentFile);
 
 	inline void useProgram() __attribute__ ((deprecated)) {
 		use();
@@ -45,7 +46,7 @@ public:
 	GLuint colorPointer;
 	GLuint mvpMatrixPointer;
 
-	StandardShaderProgram(std::string vertexCode, std::string fragmentCode);
+	StandardShaderProgram(const std::string &vertexCode, const std::string &fragmentCode);
 	void disable();
 };
 
@@ -56,7 +57,7 @@ static void printGLString(const char *name, GLenum s) {
 }
 
 
-static int checkGlError(const char* op, bool throwError = false) {
+static int checkGlError(const char* op, bool throwError = true) {
 	bool ret = false;
     for (GLint error = glGetError(); error; error
             = glGetError()) {
@@ -93,7 +94,7 @@ static int checkGlError(const char* op, bool throwError = false) {
         debug_print("after %s()\n glError (0x%x) %s \n\n", op, error, c);
         printGLString(op, error);
         if (throwError) {
-        	throw c;
+        	throw std::runtime_error(c);
         }
     }
     return ret;

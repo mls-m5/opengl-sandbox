@@ -92,7 +92,7 @@ ShaderProgram::ShaderProgram(){
 
 }
 
-void ShaderProgram::initProgram(std::string vertexCode, std::string fragmentCode) {
+void ShaderProgram::initProgram(const std::string &vertexCode, const std::string &fragmentCode) {
 	if (_program) {
 		glDeleteProgram(_program);
 	}
@@ -116,7 +116,7 @@ GLint ShaderProgram::getAttribute(char const* name) {
 	return ret;
 }
 
-ShaderProgram::ShaderProgram(std::string vertexCode, std::string fragmentCode) {
+ShaderProgram::ShaderProgram(const std::string &vertexCode, const std::string &fragmentCode) {
 	initProgram(vertexCode, fragmentCode);
 }
 
@@ -126,7 +126,7 @@ ShaderProgram::~ShaderProgram() {
 	}
 }
 
-StandardShaderProgram::StandardShaderProgram(std::string vertexCode, std::string fragmentCode) :
+StandardShaderProgram::StandardShaderProgram(const std::string &vertexCode, const std::string &fragmentCode) :
 		ShaderProgram(vertexCode, fragmentCode) {
 
 	vertexPointer = getAttribute("vPosition");
@@ -154,7 +154,7 @@ void ShaderProgram::unuse() {
 	glUseProgram(0);
 }
 
-void ShaderProgram::loadShaderFromFile(std::string vertexFile,	std::string fragmentFile) {
+void ShaderProgram::loadShaderFromFile(const std::string &vertexFile, const std::string &fragmentFile) {
 	std::ifstream vfile(vertexFile);
 	if (!vfile) {
 		cout << "could not open vertex shader file " << vertexFile << endl;
