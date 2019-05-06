@@ -144,7 +144,7 @@ namespace GL {
 		VertexBufferObject(const VertexBufferObject &) = delete;
 
 		~VertexBufferObject() {
-			glCall(glGenBuffers(1, &id));
+			glCall(glDeleteBuffers(1, &id));
 		}
 
 		void bind() {
@@ -449,11 +449,10 @@ int main(int argc, char **argv) {
     // For rendering the world -----------------------------------------------------------
 	ShaderProgram worldProgram(plainShader::vertex, plainShader::fragment);
 	GL::VertexArrayObject vao;
-	{
-		GL::VertexBufferObject vertexBuffer(objectVertices, 0, 3);
 
-		GL::VertexBufferObject elementBuffer(indices);
-	}
+	GL::VertexBufferObject ObjectVertexBuffer(objectVertices, 0, 3);
+
+	GL::VertexBufferObject ObjectElementBuffer(indices);
 
 	worldProgram.use();
 
@@ -471,11 +470,10 @@ int main(int argc, char **argv) {
 	ShaderProgram screenProgram(texturedShader::vertex, texturedShader::fragment);
 	// -- Rendering to the screen ---------------------------------------------
 	VertexArrayObject screenVao;
-	{
-		GL::VertexBufferObject vertexBuffer(vertices, 0, 3);
-		GL::VertexBufferObject textureCoordinates(texCoords, 1, 2);
-		GL::VertexBufferObject elementBuffer(indices);
-	}
+
+	GL::VertexBufferObject screenVertexBuffer(vertices, 0, 3);
+	GL::VertexBufferObject screenTextureCoordinates(texCoords, 1, 2);
+	GL::VertexBufferObject screenElementBuffer(indices);
 
 	screenProgram.use();
 	texAttachment.bind();
