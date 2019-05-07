@@ -47,6 +47,17 @@ GLenum getType<GLint>() {
 	return GL_INT;
 }
 
+template <>
+GLenum getType<GLubyte>() {
+	return GL_UNSIGNED_BYTE;
+}
+
+template <>
+GLenum getType<GLbyte>() {
+	return GL_BYTE;
+}
+
+
 
 class VertexBufferObject {
 public:
@@ -270,6 +281,80 @@ public:
 
 	~DepthBufferAttachment() {
 		glCall(glDeleteRenderbuffers(1, &id));
+	}
+
+	GLuint id;
+};
+
+
+class Texture {
+public:
+	Texture() {
+		glGenTextures(1, &id);
+	}
+
+	//Shorthand function
+	//Possible formats: GL_ALPHA, GL_RGB, GL_RGBA, GL_LUMINANCE, and GL_LUMINANCE_ALPHA
+	template <typename T>
+	Texture(std::vector<T> data, int width, int height, GLenum format = GL_RGB, bool generateMipmap = true, bool linearInterpolation = true): Texture() {
+		setData(data, width, height, format);
+		if (generateMipmap) {
+			this->generateMipmap();
+		}
+		if (linearInterpolation) {
+			setParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			setParameteri(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
+		else {
+			setParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			setParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		}
+		setWrap();
+	}
+
+	// Possible formats: GL_ALPHA, GL_RGB, GL_RGBA, GL_LUMINANCE, and GL_LUMINANCE_ALPHA
+	template <typename T>
+	void setData(std::vector<T> data, int width, int height, GLenum format = GL_RGB) {
+		bind();
+		glCall(glTexImage2D(
+				GL_TEXTURE_2D, 0, format,
+				width, height, 0, format,
+				getType<T>(), &data.front()
+		));
+	}
+
+	void generateMipmap() {
+		bind();
+		glCall(glGenerateMipmap(GL_TEXTURE_2D));
+	}
+
+	Texture(Texture &&other) {
+		id = other.id;
+		other.id = 0;
+	}
+
+	void bind() {
+		glBindTexture(GL_TEXTURE_2D, id);
+	}
+
+	//Note that you need to bind before using these functions
+	static void setParameteri(GLenum paramName, GLint value) {
+		glTexParameteri(GL_TEXTURE_2D, paramName, value);
+	}
+
+	static void setWrap() {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+
+	void unbind() {
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	~Texture() {
+		if (id) {
+			glDeleteTextures(1, &id);
+		}
 	}
 
 	GLuint id;
