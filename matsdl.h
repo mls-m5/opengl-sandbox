@@ -94,5 +94,4 @@ public:
 };
 
 
-
 } // namespace SDL
