@@ -2,7 +2,8 @@
 
 flags= $< shaderprogram.cpp -std=c++11 -g -o $@ -lSDL2 -lGL  -fmax-errors=5 -O0 -W -Wall -Wno-unused-parameter -Wno-sign-compare -Wno-shadow
 
-targets= test1 test2 test3 test4 test5 test6-intel  test7-framebuffer test8-multitextures
+targets= test1 test2 test3 test4 test5 test6-intel \
+  test7-framebuffer test8-multitextures test9-2dshadow
 
 
 all: ${targets}
@@ -13,6 +14,9 @@ all: ${targets}
 
 test8-multitextures: test8-multitextures.cpp
 	c++ ${flags}
+	
+test9-2dshadow: test9-2dshadow.cpp
+	c++ ${flags} -Wno-narrowing
 	
 
 clean:

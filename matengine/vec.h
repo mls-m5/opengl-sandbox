@@ -99,7 +99,7 @@ class Vec
 			return (&x)[index];
 		}
 
-		inline const double operator[] (int index) const {
+		inline double operator[] (int index) const {
 			return (&x)[index];
 		}
 

@@ -57,8 +57,8 @@ std::vector<float> positions = {
 		 1,  1, 0,
 		 1, -1, 0,
 		-1, -1, 0,
-
 };
+
 std::vector<float> texCoords = {
 		0, 1,
 		1, 1,

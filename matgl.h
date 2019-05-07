@@ -77,7 +77,7 @@ public:
 	template <class T>
 	VertexBufferObject(
 			const std::vector<T> &data,
-			GLuint index, GLuint size,
+			GLuint index, GLuint size = 3,
 			GLuint stride = 0, size_t start = 0,
 			GLenum target = GL_ARRAY_BUFFER,
 			GLenum usage = GL_STATIC_DRAW):
@@ -205,7 +205,7 @@ public:
 
 class TextureAttachment {
 public:
-	TextureAttachment(int width, int height) {
+	TextureAttachment(int width, int height, GLenum attachment = GL_COLOR_ATTACHMENT0) {
 		glCall(glGenTextures(1, &id));
 		bind();
 		glCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
@@ -238,7 +238,7 @@ public:
 		glCall(glGenTextures(1, &id));
 		bind();
 		glCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, width, height, 0,
-				GL_DEPTH_COMPONENT, GL_RGB, nullptr));
+				GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr));
 		glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 		glCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
 		glCall(glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, id, 0));
@@ -271,16 +271,16 @@ public:
 		unbind();
 	}
 
+	~DepthBufferAttachment() {
+		glCall(glDeleteRenderbuffers(1, &id));
+	}
+
 	void bind() {
 		glCall(glBindRenderbuffer(GL_RENDERBUFFER, id));
 	}
 
 	void unbind() {
 		glCall(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-	}
-
-	~DepthBufferAttachment() {
-		glCall(glDeleteRenderbuffers(1, &id));
 	}
 
 	GLuint id;
