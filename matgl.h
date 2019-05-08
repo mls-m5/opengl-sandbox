@@ -165,7 +165,6 @@ public:
 };
 
 
-
 class FrameBufferObject {
 public:
 	FrameBufferObject(int width, int height):

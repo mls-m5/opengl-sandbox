@@ -18,8 +18,8 @@ public:
 		this->_program = s._program;
 	}
 	ShaderProgram();
-	ShaderProgram(const std::string &vertexCode, const std::string &fragmentCode);
-	void initProgram(const std::string &vertexCode, const std::string &fragmentCode);
+	ShaderProgram(const std::string &vertexCode, const std::string &fragmentCode, const std::string &geometryCode = "");
+	void initProgram(const std::string &vertexCode, const std::string &fragmentCode, const std::string &geometryCode = "");
 	void loadShaderFromFile(const std::string &vertexFile, const std::string &fragmentFile);
 
 	inline void useProgram() __attribute__ ((deprecated)) {
@@ -46,7 +46,7 @@ public:
 	GLuint colorPointer;
 	GLuint mvpMatrixPointer;
 
-	StandardShaderProgram(const std::string &vertexCode, const std::string &fragmentCode);
+	StandardShaderProgram(const std::string &vertexCode, const std::string &fragmentCode, const std::string &geometryCode = "");
 	void disable();
 };
 
@@ -57,7 +57,7 @@ static void printGLString(const char *name, GLenum s) {
 }
 
 
-static int checkGlError(const char* op, bool throwError = true) {
+inline int checkGlError(const char* op, bool throwError = true) {
 	bool ret = false;
     for (GLint error = glGetError(); error; error
             = glGetError()) {

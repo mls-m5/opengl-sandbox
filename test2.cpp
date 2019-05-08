@@ -159,7 +159,7 @@ int main (int ArgCount, char **Args)
 	SDL_GL_SetSwapInterval(1);
 
 	bool running = 1;
-	bool fullScreen = 0;
+//	bool fullScreen = 0;
 	while (running) {
 		SDL_Event Event;
 		while (SDL_PollEvent(&Event)) {

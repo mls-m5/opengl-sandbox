@@ -4,9 +4,9 @@ targets= ${testcpp:.cpp=}
 
 
 all: ${targets}
-	echo ${targets}
+	@echo built ${targets}
 
-test%: test%.cpp shaderprogram.h shaderprogram.cpp
+test%: test%.cpp shaderprogram.h shaderprogram.cpp matgl.h matsdl.h
 	c++ ${flags}
 
 

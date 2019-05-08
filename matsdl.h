@@ -23,7 +23,7 @@ void checkError(const std::string& line) {
 
 class Window {
 public:
-	Window (const std::string &title, int x, int y, int w, int h, Uint32 flags) {
+	Window (const std::string &title, int x, int y, int w, int h, Uint32 flags = SDL_WINDOW_OPENGL) {
 		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 			throw std::runtime_error( "could not init sdl video");
 		}
@@ -58,7 +58,9 @@ public:
 };
 
 class GLContext {
+	GLContext() = delete;
 public:
+
 	GLContext(SDL_Window *window) {
 		context = SDL_GL_CreateContext(window);
 		SDL::checkError(std::to_string(__LINE__));
@@ -69,28 +71,6 @@ public:
 	}
 
 	SDL_GLContext context;
-};
-
-class VertexArrayObject  {
-public:
-	VertexArrayObject() {
-		glCall(glGenVertexArrays(1, &id));
-		bind();
-	}
-
-	void bind() {
-		glCall(glBindVertexArray(id));
-	}
-
-	void unbind() {
-		glCall(glBindVertexArray(0));
-	}
-
-	~VertexArrayObject() {
-		glCall(glDeleteVertexArrays(1, &id));
-
-	}
-	GLuint id;
 };
 
 

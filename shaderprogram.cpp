@@ -40,7 +40,7 @@ GLuint loadShader(GLenum shaderType, const char* pSource) {
 }
 
 
-GLuint createProgram(std::string pVertexSource, std::string pFragmentSource) {
+GLuint createProgram(std::string pVertexSource, std::string pFragmentSource, const std::string &geometryCode) {
     GLuint vertexShader = loadShader(GL_VERTEX_SHADER, pVertexSource.c_str());
     if (!vertexShader) {
     	debug_print("Shader program: failed creating vertex shader");
@@ -53,12 +53,18 @@ GLuint createProgram(std::string pVertexSource, std::string pFragmentSource) {
         return 0;
     }
 
+    GLuint geometryShader = 0;
+    if (!geometryCode.empty()) {
+    	geometryShader = loadShader(GL_GEOMETRY_SHADER, geometryCode.c_str());
+    }
+
     GLuint program = glCreateProgram();
     if (program) {
-        glAttachShader(program, vertexShader);
-        checkGlError("glAttachShader");
-        glAttachShader(program, pixelShader);
-        checkGlError("glAttachShader");
+        glCall(glAttachShader(program, vertexShader));
+        glCall(glAttachShader(program, pixelShader));
+        if (!geometryCode.empty()) {
+        	glCall(glAttachShader(program, geometryShader));
+        }
         glLinkProgram(program);
         GLint linkStatus = GL_FALSE;
         glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
@@ -92,11 +98,11 @@ ShaderProgram::ShaderProgram(){
 
 }
 
-void ShaderProgram::initProgram(const std::string &vertexCode, const std::string &fragmentCode) {
+void ShaderProgram::initProgram(const std::string &vertexCode, const std::string &fragmentCode, const std::string &geometryCode) {
 	if (_program) {
 		glDeleteProgram(_program);
 	}
-	_program = createProgram(vertexCode, fragmentCode);
+	_program = createProgram(vertexCode, fragmentCode, geometryCode);
 }
 
 GLint ShaderProgram::getUniform(char const* name) {
@@ -116,8 +122,8 @@ GLint ShaderProgram::getAttribute(char const* name) {
 	return ret;
 }
 
-ShaderProgram::ShaderProgram(const std::string &vertexCode, const std::string &fragmentCode) {
-	initProgram(vertexCode, fragmentCode);
+ShaderProgram::ShaderProgram(const std::string &vertexCode, const std::string &fragmentCode, const std::string &geometryCode) {
+	initProgram(vertexCode, fragmentCode, geometryCode);
 }
 
 ShaderProgram::~ShaderProgram() {
@@ -126,8 +132,8 @@ ShaderProgram::~ShaderProgram() {
 	}
 }
 
-StandardShaderProgram::StandardShaderProgram(const std::string &vertexCode, const std::string &fragmentCode) :
-		ShaderProgram(vertexCode, fragmentCode) {
+StandardShaderProgram::StandardShaderProgram(const std::string &vertexCode, const std::string &fragmentCode, const std::string &geometryCode) :
+		ShaderProgram(vertexCode, fragmentCode, geometryCode) {
 
 	vertexPointer = getAttribute("vPosition");
 	colorPointer = getAttribute("vColor");

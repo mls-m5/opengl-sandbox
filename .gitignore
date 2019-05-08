@@ -10,4 +10,5 @@ test6-intel
 test7-framebuffer
 test8-multitextures
 test9-2dshadow
+test10-geometry-shader
 
