@@ -42,9 +42,9 @@ uniform sampler2D texture2;
 
 
 void main() {
-//	fragColor = texture(texture1, fTexCoords) / 2. + texture(texture2, fTexCoords) / 2;
 	fragColor = texture(texture1, fTexCoords) + texture(texture2, fTexCoords);
 //	fragColor = texture(texture1, fTexCoords);
+//	fragColor = texture(texture2, fTexCoords);
 }
 
 

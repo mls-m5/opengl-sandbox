@@ -338,9 +338,9 @@ void drawComet(Vec p, double a, double r){
 
 	//This crashes
 	modelTransform(p, a / 180., r);
-#warning "this is the problem, you need to create a vertex buffer to store"
-#warning "the data in first and then use that when bound to the vertexArray"
-#warning "when calling glVertexAttribPointer"
+//#warning "this is the problem, you need to create a vertex buffer to store"
+//#warning "the data in first and then use that when bound to the vertexArray"
+//#warning "when calling glVertexAttribPointer"
 //    glCall(glEnableVertexAttribArray(shaderVecPointer));
 //    glCall(glVertexAttribPointer(shaderVecPointer, 2, GL_FLOAT, GL_FALSE, 0, gCometVertices));
 
@@ -397,7 +397,7 @@ int main(int argc, char **argv) {
     while(true) {
 
     	//ttime = SDL_GetTicks() + frametime;
-    	long ttime =  15 + SDL_GetTicks();
+//    	long ttime =  15 + SDL_GetTicks();
 //        processEvents();
 
     	// Process SDL events

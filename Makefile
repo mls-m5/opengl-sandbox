@@ -1,23 +1,14 @@
-
-
-flags= $< shaderprogram.cpp -std=c++11 -g -o $@ -lSDL2 -lGL  -fmax-errors=5 -O0 -W -Wall -Wno-unused-parameter -Wno-sign-compare -Wno-shadow
-
-targets= test1 test2 test3 test4 test5 test6-intel \
-  test7-framebuffer test8-multitextures test9-2dshadow
+flags= $< shaderprogram.cpp -std=c++11 -g -o $@ -lSDL2 -lGL  -fmax-errors=5 -O0 -W -Wall -Wno-unused-parameter -Wno-sign-compare -Wno-shadow  -Wno-narrowing -Imatengine/
+testcpp= ${wildcard test*.cpp}
+targets= ${testcpp:.cpp=}
 
 
 all: ${targets}
+	echo ${targets}
 
-%: %.cpp shaderprogram.h shaderprogram.cpp
-	./$<
-
-
-test8-multitextures: test8-multitextures.cpp
+test%: test%.cpp shaderprogram.h shaderprogram.cpp
 	c++ ${flags}
-	
-test9-2dshadow: test9-2dshadow.cpp
-	c++ ${flags} -Wno-narrowing
-	
+
 
 clean:
 	rm -f ${targets}
