@@ -73,6 +73,7 @@ public:
 	// index is the index in the shader program
 	// size is the size of each element eg 3 for 3d-position
 	// stride is how far it is between each element in bytes
+	//   can for example be calculated by sizeof(T) * element size
 	// start is the starting position in bytes
 	template <class T>
 	VertexBufferObject(

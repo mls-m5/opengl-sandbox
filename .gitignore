@@ -1,14 +1,7 @@
+*
+!*.*
+!*/
 .cproject
 .project
 .settings/
-test1
-test2
-test3
-test4
-test5
-test6-intel
-test7-framebuffer
-test8-multitextures
-test9-2dshadow
-test10-geometry-shader
 
