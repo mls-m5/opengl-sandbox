@@ -101,7 +101,7 @@ void init(void)
 	shaderProgram.initProgram(vertexShader, fragmentShader);
 	shaderProgram.use();
 	glCall(glVertexAttribPointer(vPosition, 2, GL_FLOAT,
-			false, 0, BUFFER_OFFSET(0)));
+			false, 0, (void*)0));
 	glCall(glEnableVertexAttribArray(vPosition));
 
 }

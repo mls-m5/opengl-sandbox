@@ -17,7 +17,7 @@ using namespace std;
 const char *vertex = R"_(
 #version 330
 
-uniform vec3 translations[5000];
+uniform vec3 translations[5000]; // My intel card does not like 10000
 uniform mat4 rotation;
 
 layout (location = 0) in vec3 vPosition;
@@ -75,21 +75,28 @@ int main(int argc, char **argv) {
 	GL::VertexBufferObject positions(vertices, 0, 4, 6 * sizeof(float), 0);
 	GL::VertexBufferObject textures(vertices, 1, 4, 6 * sizeof(float), 2);
 
+	auto stdRand = []() {
+		float ret = 0;
+
+		for (int i = 0; i < 12; ++i) {
+			ret += ((float) rand() / RAND_MAX - .5);
+		}
+		return ret / 6;
+	};
+
 	bool random = true;
 	int pointCount;
 	std::vector<float> translations;
 	if (random) {
 		pointCount = 5000;
-//		int sqrtCount = sqrt(pointCount);
 		srand(time(0));
 		translations.reserve(pointCount * 3);
-		cout << pointCount << endl;
 		for (int i = 0; i < pointCount; ++i) {
-			translations.insert(translations.end(), {(double) rand() / RAND_MAX - .5, (double)rand() / RAND_MAX -.5 , (double)rand() / RAND_MAX -.5});
+			translations.insert(translations.end(), {stdRand(), stdRand(), stdRand()});
 		}
 	}
 	else {
-		pointCount = 1000;
+		pointCount = 5000;
 		int pointWidth = sqrt(pointCount);
 		for (int i = 0; i < pointCount; ++i) {
 			translations.insert(translations.end(), {(float)(i / pointWidth) / pointWidth - .5, (float)(i % pointWidth) / pointWidth - .5, 0});
