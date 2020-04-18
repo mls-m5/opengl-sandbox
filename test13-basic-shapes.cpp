@@ -35,12 +35,12 @@ const std::string vertex =
         layout (location = 0) in vec4 vPosition;
         layout (location = 1) in vec3 vNormal;
 
-//        uniform matrix4 uModel;
-
         out vec3 fNormal;
 
+        uniform mat4 uModel;
+
         void main() {
-            gl_Position = vPosition;
+            gl_Position = uModel * vPosition;
             fNormal = vPosition.xyz; // Test
         }
 )_";
@@ -54,9 +54,9 @@ const std::string fragment =
         out vec4 fragColor;
 
         void main() {
-            fragColor = vec4(1, 1, 1, 1);
+//            fragColor = vec4(1, 1, 1, 1);
 //            if (fNormal.z > 1) {
-//                fragColor = vec4(1,1,.5 + fNormal.z / 2,1);
+                fragColor = vec4(1,.5 + fNormal.z / 2,1,1);
 //            }
 //            else {
 //                fragColor = vec4(1,1,.5,1);
@@ -104,15 +104,15 @@ Mesh createCylinderVertices() {
 
     for (size_t i = 0; i < numPoints; ++i) {
         auto angle = pi2 / numPoints * i;
-        mesh.vertices.emplace_back(sin(angle) / 2, cos(angle) / 2, 1);
+        mesh.vertices.emplace_back(sin(angle), cos(angle), 1);
     }
 
     for (size_t i = 0; i < numPoints; ++i) {
         auto angle = pi2 / numPoints * i;
-        mesh.vertices.emplace_back(sin(angle) / 2, cos(angle) / 2, 1);
+        mesh.vertices.emplace_back(sin(angle), cos(angle), 1);
     }
 
-    for (unsigned i = 0; i < numPoints; ++i) {
+    for (unsigned i = 1; i < numPoints; ++i) {
         mesh.indices.push_back(0);
         mesh.indices.push_back(firstCircle1 + i);
         mesh.indices.push_back(firstCircle1 + i - 1);
@@ -169,13 +169,17 @@ int main(int /*argc*/, char ** /*argv*/) {
 
     cylVao.unbind();
 
-    //    auto modelTransform = Matrixf::Identity();
+    auto modelTransform = Matrixf::Scale(.5, .5);
 
-    //    auto modelUniform = program.getUniform("uModel");
+    GLint modelUniform;
+
+    glCall(modelUniform = program.getUniform("uModel"));
+    glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
 
     // -------------------------------------------------------------
 
     bool running = true;
+    float angle = 0;
 
     while (running) {
         SDL_Event event;
@@ -188,14 +192,21 @@ int main(int /*argc*/, char ** /*argv*/) {
         glClearColor(.1f, .3f, 0, 0);
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-        vao.bind();
-        program.use();
-        //        glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
-        //        nullptr));
+        if (0) {
+            vao.bind();
+            program.use();
+            glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+        }
+
+        angle += .01;
+        modelTransform = Matrixf::Scale(.5) * Matrixf::RotationY(angle);
+        //        modelTransform.w3 = .1;
+        glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
+
+        glEnable(GL_DEPTH_TEST);
 
         cylVao.bind();
         program.use();
-        //        glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
         glCall(glDrawElements(
             GL_TRIANGLE_STRIP, face.indices.size(), GL_UNSIGNED_INT, nullptr));
 
