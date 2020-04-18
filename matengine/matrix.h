@@ -420,7 +420,7 @@ public:
 		return Vec(at(num, 0), at(num, 1), at(num, 2));
 	}
 
-	inline Matrix &setRow(int num, Vec v) {
+	inline Matrix &row(int num, Vec v) {
 		at(0, num) = v.x;
 		at(1, num) = v.y;
 		at(2, num) = v.z;
@@ -428,7 +428,7 @@ public:
 		return *this;
 	}
 
-	inline Matrix &setCol(int num, Vec v) {
+	inline Matrix &col(int num, Vec v) {
 		at(num, 0) = v.x;
 		at(num, 1) = v.y;
 		at(num, 2) = v.z;
@@ -504,7 +504,7 @@ public:
 	Matrix &rotate(T angle, Vec axis) {
 		Vec position = getRow(3);
 		*this = rotationFromThis(angle, axis);
-		setRow(3, position);
+		row(3, position);
 		return *this;
 	}
 

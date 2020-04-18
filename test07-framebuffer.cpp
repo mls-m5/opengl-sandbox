@@ -30,7 +30,6 @@ R"_(
 #version 330 core
 
 in vec4 position;
-in mat4 location;
 
 void main() {
 	gl_Position = position;
@@ -209,7 +208,7 @@ int main(int argc, char **argv) {
 		glDisable(GL_DEPTH_TEST);
 
 		texAttachment.bind();
-		depthAttachment.bind();
+//		depthAttachment.bind();
 
 		screenProgram.use();
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
