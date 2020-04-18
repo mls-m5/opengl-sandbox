@@ -8,4 +8,4 @@ opengl-sandbox.config
 opengl-sandbox.creator
 opengl-sandbox.files
 opengl-sandbox.includes
-
+*.creator.user

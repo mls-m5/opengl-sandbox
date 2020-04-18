@@ -105,7 +105,7 @@ void die(std::string message) {
     throw message;
 }
 
-int main(int ArgCount, char **Args) {
+int main(int argc, char **argv) {
     auto width = 500;
     auto height = 500;
 
@@ -148,12 +148,13 @@ int main(int ArgCount, char **Args) {
                     break;
                     //				case 'f':
                     //					fullScreen =
-                    //!fullScreen; 					if (fullScreen) {
+                    //! fullScreen; 					if
+                    //! (fullScreen) {
                     //						SDL_SetWindowFullscreen(window.get(),
-                    //								windowFlags |
-                    //SDL_WINDOW_FULLSCREEN_DESKTOP); 					} else {
-                    //						SDL_SetWindowFullscreen(window.get(),
-                    //windowFlags);
+                    //								windowFlags
+                    //| SDL_WINDOW_FULLSCREEN_DESKTOP);
+                    // } else { 						SDL_SetWindowFullscreen(window.get(),
+                    // windowFlags);
                     //					}
                     //					break;
                     //				default:
