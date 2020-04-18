@@ -7,14 +7,14 @@
 
 // look at https://learnopengl.com/Advanced-OpenGL/Geometry-Shader
 
-#include <iostream>
+#include "matgui/matgl.h"
 #include "matsdl.h"
-#include "matgl.h"
+#include <iostream>
 
 using namespace std;
 
-const char * vertex =
-R"_(
+const char *vertex =
+    R"_(
 #version 330
 
 in vec3 vPosition;
@@ -30,8 +30,8 @@ void main() {
 
 )_";
 
-const char * geometry =
-R"_(
+const char *geometry =
+    R"_(
 #version 330 core
 layout (points) in;
 layout (triangle_strip, max_vertices = 3) out;
@@ -58,8 +58,8 @@ void main() {
 
 )_";
 
-const char * fragment =
-R"_(
+const char *fragment =
+    R"_(
 #version 330
 
 in vec4 gColor;
@@ -71,8 +71,7 @@ void main() {
 
 )_";
 
-
-
+// clang-format off
 std::vector<float> positions = {
 		0, 0,
 		1, 0,
@@ -82,36 +81,36 @@ std::vector<float> positions = {
 		1, 1,
 		0, 1,
 };
-
+// clang-format on
 
 int main(int argc, char **argv) {
-	int width = 800,  height = 600;
-	SDL::Window window("hej", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height);
-	SDL::GLContext context(window);
+    int width = 800, height = 600;
+    SDL::Window window(
+        "hej", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height);
+    SDL::GLContext context(window);
 
-	ShaderProgram program(vertex, fragment, geometry);
-	program.use();
-	GL::VertexArrayObject vao;
-	GL::VertexBufferObject vbo(positions, 0, 2);
+    ShaderProgram program(vertex, fragment, geometry);
+    program.use();
+    GL::VertexArrayObject vao;
+    GL::VertexBufferObject vbo(positions, 0, 2);
 
-	bool running = true;
-	while (running) {
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
-				running = false;
-			}
-		}
+    bool running = true;
+    while (running) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            }
+        }
 
-		glClearColor(.1f, .4f, 0.f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(.1f, .4f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		program.use();
-		vao.bind();
-//		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glDrawArrays(GL_POINTS, 0, 6);
+        program.use();
+        vao.bind();
+        //		glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawArrays(GL_POINTS, 0, 6);
 
-		window.swap();
-	}
+        window.swap();
+    }
 }
-

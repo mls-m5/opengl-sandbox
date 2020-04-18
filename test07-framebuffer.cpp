@@ -12,8 +12,7 @@ exit
  *      Author: Mattias Larsson Sköld
  */
 
-
-#include "matgl.h"
+#include "matgui/matgl.h"
 #include "matsdl.h"
 #include <iostream>
 #include <memory>
@@ -26,7 +25,7 @@ using namespace GL;
 namespace plainShader {
 
 const string vertex =
-R"_(
+    R"_(
 #version 330 core
 
 in vec4 position;
@@ -37,9 +36,8 @@ void main() {
 
 )_";
 
-
 const string fragment =
-R"_(
+    R"_(
 #version 330 core
 
 out vec4 fragColor;
@@ -50,14 +48,12 @@ void main() {
 
 )_";
 
-
-} //Namespace
-
+} // namespace plainShader
 
 namespace texturedShader {
 
 const string vertex =
-R"_(
+    R"_(
 
 #version 330 core
 layout (location = 0) in vec2 aPos;
@@ -73,9 +69,8 @@ void main()
 
 )_";
 
-
 const string fragment =
-R"_(
+    R"_(
 
 #version 330 core
 out vec4 FragColor;
@@ -92,8 +87,11 @@ void main()
 
 )_";
 
+// clang-format off
+} // namespace texturedShader
 
-} //Namespace
+namespace {
+
 vector<float> vertices = {
 		0, 0, 0,
 		1, 0, 0,
@@ -119,103 +117,110 @@ vector<GLuint> indices = {
 		0, 1, 2,
 		0, 2, 3
 };
+// clang-format on
+
+} // namespace
 
 int main(int argc, char **argv) {
     int width = 800, height = 600;
 
-    SDL::Window window("Hej", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    SDL::Window window("Hej",
+                       SDL_WINDOWPOS_UNDEFINED,
+                       SDL_WINDOWPOS_UNDEFINED,
+                       width,
+                       height,
+                       SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
     SDL::GLContext context(window);
 
-    // For rendering the world -----------------------------------------------------------
-	ShaderProgram worldProgram(plainShader::vertex, plainShader::fragment);
-	GL::VertexArrayObject vao;
+    // For rendering the world
+    // -----------------------------------------------------------
+    ShaderProgram worldProgram(plainShader::vertex, plainShader::fragment);
+    GL::VertexArrayObject vao;
 
-	GL::VertexBufferObject ObjectVertexBuffer(objectVertices, 0, 3);
+    GL::VertexBufferObject ObjectVertexBuffer(objectVertices, 0, 3);
 
-	GL::VertexBufferObject ObjectElementBuffer(indices);
+    GL::VertexBufferObject ObjectElementBuffer(indices);
 
-	worldProgram.use();
+    worldProgram.use();
 
-	vao.unbind();
+    vao.unbind();
 
+    // -------------------------- define frame buffer object
+    // ------------------------------------------
 
-	// -------------------------- define frame buffer object ------------------------------------------
+    int w = 30, h = 20;
+    FrameBufferObject fbo(w, h);
+    TextureAttachment texAttachment(w, h);
+    DepthBufferAttachment depthAttachment(w, h);
+    fbo.unBind();
 
-	int w = 30, h = 20;
-	FrameBufferObject fbo(w, h);
-	TextureAttachment texAttachment(w, h);
-	DepthBufferAttachment depthAttachment(w, h);
-	fbo.unBind();
+    ShaderProgram screenProgram(texturedShader::vertex,
+                                texturedShader::fragment);
+    // -- Rendering to the screen ---------------------------------------------
+    VertexArrayObject screenVao;
 
-	ShaderProgram screenProgram(texturedShader::vertex, texturedShader::fragment);
-	// -- Rendering to the screen ---------------------------------------------
-	VertexArrayObject screenVao;
+    GL::VertexBufferObject screenVertexBuffer(vertices, 0, 3);
+    GL::VertexBufferObject screenTextureCoordinates(texCoords, 1, 2);
+    GL::VertexBufferObject screenElementBuffer(indices);
 
-	GL::VertexBufferObject screenVertexBuffer(vertices, 0, 3);
-	GL::VertexBufferObject screenTextureCoordinates(texCoords, 1, 2);
-	GL::VertexBufferObject screenElementBuffer(indices);
+    screenProgram.use();
+    texAttachment.bind();
 
-	screenProgram.use();
-	texAttachment.bind();
+    screenVao.unbind();
 
-	screenVao.unbind();
+    // --------------------------------------------------------------------------------
 
-	// --------------------------------------------------------------------------------
+    SDL_GL_SetSwapInterval(1);
 
+    bool running = true;
 
-	SDL_GL_SetSwapInterval(1);
+    while (running) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+            case SDL_KEYDOWN:
+                ///
 
-	bool running = true;
+                break;
 
-	while (running) {
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			switch (event.type) {
-				case SDL_KEYDOWN:
-					///
+            case SDL_KEYUP:
+                //
 
-					break;
+                break;
+            case SDL_QUIT:
+                running = false;
+                break;
+            default:
+                break;
+            }
+        }
 
-				case SDL_KEYUP:
-					//
+        vao.bind();
+        fbo.bind();
+        glClearColor(0, .4, 1, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
 
-					break;
-				case SDL_QUIT:
-					running = false;
-					break;
-				default:
-					break;
-			}
-		}
+        worldProgram.use();
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
+        // Render to screen
+        screenVao.bind();
+        fbo.unBind(width, height); // Draw to screen
 
-		vao.bind();
-		fbo.bind();
-		glClearColor(0, .4, 1, 1);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
+        glClearColor(0, 0, 1, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
 
-		worldProgram.use();
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        texAttachment.bind();
+        //		depthAttachment.bind();
 
-		// Render to screen
-		screenVao.bind();
-		fbo.unBind(width, height); // Draw to screen
+        screenProgram.use();
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
-		glClearColor(0, 0, 1, 1);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glDisable(GL_DEPTH_TEST);
+        window.swap();
+    }
 
-		texAttachment.bind();
-//		depthAttachment.bind();
-
-		screenProgram.use();
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-
-		window.swap();
-	}
-
-	SDL_Quit();
+    SDL_Quit();
 }
-

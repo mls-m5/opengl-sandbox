@@ -8,11 +8,13 @@
 // Check https://learnopengl.com/Advanced-OpenGL/Instancing
 // for more info
 
-#include <iostream>
-#include "matsdl.h"
-#include "matgl.h"
+#include "matgui/matgl.h"
 #include "matrix.h"
+#include "matsdl.h"
+#include <iostream>
 using namespace std;
+
+namespace {
 
 const char *vertex = R"_(
 #version 330
@@ -47,8 +49,10 @@ void main() {
 
 )_";
 
+auto s = .01f;
 
-auto s = .01;
+// clang-format off
+
 // Positions and colors
 std::vector<float> vertices = {
 	0, 0, 0,  1, 0, 0,
@@ -57,84 +61,89 @@ std::vector<float> vertices = {
 	0, s, 0,  1, 0, 1,
 };
 
-int main(int argc, char **argv) {
-	int width = 800, height = 600;
-	SDL::Window window(
-			"test 11",
-			SDL_WINDOWPOS_UNDEFINED,
-			SDL_WINDOWPOS_UNDEFINED,
-			width, height, SDL_WINDOW_OPENGL
-	);
+// clang-format on
 
-	SDL::GLContext context(window);
+} // namespace
 
-	ShaderProgram program(vertex, fragment);
-	program.use();
+int main(int /*argc*/, char ** /*argv*/) {
+    int width = 800, height = 600;
+    SDL::Window window("test 11",
+                       SDL_WINDOWPOS_UNDEFINED,
+                       SDL_WINDOWPOS_UNDEFINED,
+                       width,
+                       height,
+                       SDL_WINDOW_OPENGL);
 
-	GL::VertexArrayObject vao;
-	GL::VertexBufferObject positions(vertices, 0, 4, 6 * sizeof(float), 0);
-	GL::VertexBufferObject textures(vertices, 1, 4, 6 * sizeof(float), 2);
+    SDL::GLContext context(window);
 
-	auto stdRand = []() {
-		float ret = 0;
+    ShaderProgram program(vertex, fragment);
+    program.use();
 
-		for (int i = 0; i < 12; ++i) {
-			ret += ((float) rand() / RAND_MAX - .5);
-		}
-		return ret / 6;
-	};
+    GL::VertexArrayObject vao;
+    GL::VertexBufferObject positions(vertices, 0, 4, 6 * sizeof(float), 0);
+    GL::VertexBufferObject textures(vertices, 1, 4, 6 * sizeof(float), 2);
 
-	bool random = true;
-	int pointCount;
-	std::vector<float> translations;
-	if (random) {
-		pointCount = 5000;
-		srand(time(0));
-		translations.reserve(pointCount * 3);
-		for (int i = 0; i < pointCount; ++i) {
-			translations.insert(translations.end(), {stdRand(), stdRand(), stdRand()});
-		}
-	}
-	else {
-		pointCount = 5000;
-		int pointWidth = sqrt(pointCount);
-		for (int i = 0; i < pointCount; ++i) {
-			translations.insert(translations.end(), {(float)(i / pointWidth) / pointWidth - .5, (float)(i % pointWidth) / pointWidth - .5, 0});
-		}
-	}
+    auto stdRand = []() {
+        float ret = 0;
 
-	glCall(glUniform3fv(0, pointCount, &translations.front()));
+        for (int i = 0; i < 12; ++i) {
+            ret += ((float)rand() / RAND_MAX - .5);
+        }
+        return ret / 6;
+    };
 
-	vao.unbind();
+    bool random = true;
+    int pointCount;
+    std::vector<float> translations;
+    if (random) {
+        pointCount = 5000;
+        srand(time(0));
+        translations.reserve(pointCount * 3);
+        for (int i = 0; i < pointCount; ++i) {
+            translations.insert(translations.end(),
+                                {stdRand(), stdRand(), stdRand()});
+        }
+    }
+    else {
+        pointCount = 5000;
+        int pointWidth = sqrt(pointCount);
+        for (int i = 0; i < pointCount; ++i) {
+            translations.insert(translations.end(),
+                                {(float)(i / pointWidth) / pointWidth - .5,
+                                 (float)(i % pointWidth) / pointWidth - .5,
+                                 0});
+        }
+    }
 
-	bool running = true;
-	float time = 0;
-	auto locationIndex = program.getUniform("rotation");
-	Matrixf rotation = Matrixf::Identity();
-	while (running) {
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
-				running = false;
-			}
-		}
+    glCall(glUniform3fv(0, pointCount, &translations.front()));
 
-		time += .01;
-		rotation = Matrixf::RotationX(time);
+    vao.unbind();
 
-		glClearColor(0, 0, .4, 1);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    bool running = true;
+    float time = 0;
+    auto locationIndex = program.getUniform("rotation");
+    Matrixf rotation = Matrixf::Identity();
+    while (running) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            }
+        }
 
-		vao.bind();
-		program.use();
+        time += .01;
+        rotation = Matrixf::RotationX(time);
 
-		glCall(glUniformMatrix4fv(locationIndex, 1, false, rotation));
+        glClearColor(0, 0, .4, 1);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		glCall(glDrawArraysInstanced(GL_TRIANGLES, 0, 3, pointCount));
+        vao.bind();
+        program.use();
 
-		window.swap();
-	}
+        glCall(glUniformMatrix4fv(locationIndex, 1, false, rotation));
+
+        glCall(glDrawArraysInstanced(GL_TRIANGLES, 0, 3, pointCount));
+
+        window.swap();
+    }
 }
-
-
-

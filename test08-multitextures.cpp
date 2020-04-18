@@ -5,12 +5,11 @@
  *      Author: Mattias Larsson Sköld
  */
 
-
 #include <iostream>
 
-#include "matgl.h"
+#include "matgui/matgl.h"
+#include "matgui/shaderprogram.h"
 #include "matsdl.h"
-#include "shaderprogram.h"
 
 using namespace std;
 
@@ -50,8 +49,11 @@ void main() {
 
 )_";
 
-}
+} // namespace shader
 
+namespace {
+
+// clang-format off
 std::vector<float> positions = {
 		-1,  1, 0,
 		 1,  1, 0,
@@ -91,73 +93,71 @@ vector <unsigned char> texData2 = {
 		of, re, of, re,
 };
 
+// clang-format on
+
 #undef on
 #undef of
+
+} // namespace
 
 using namespace GL;
 
 int main(int argc, char **argv) {
-	cout << "started..." << endl;
-	int width = 800;
-	int heigth = 600;
-	SDL::Window window(
-			"Hej",
-			SDL_WINDOWPOS_UNDEFINED,
-			SDL_WINDOWPOS_UNDEFINED,
-			width,
-			heigth,
-			SDL_WINDOW_OPENGL
-	);
+    cout << "started..." << endl;
+    int width = 800;
+    int heigth = 600;
+    SDL::Window window("Hej",
+                       SDL_WINDOWPOS_UNDEFINED,
+                       SDL_WINDOWPOS_UNDEFINED,
+                       width,
+                       heigth,
+                       SDL_WINDOW_OPENGL);
 
-	SDL::GLContext context(window);
+    SDL::GLContext context(window);
 
-	ShaderProgram program(shader::vertex, shader::fragment);
+    ShaderProgram program(shader::vertex, shader::fragment);
 
-	GL::VertexArrayObject vao;
-	program.use();
+    GL::VertexArrayObject vao;
+    program.use();
 
-	GL::VertexBufferObject vboPos(positions, 0, 3);
-	GL::VertexBufferObject vboTex(texCoords, 1, 2);
-	GL::VertexBufferObject vboInd(indices);
+    GL::VertexBufferObject vboPos(positions, 0, 3);
+    GL::VertexBufferObject vboTex(texCoords, 1, 2);
+    GL::VertexBufferObject vboInd(indices);
 
-	glUniform1i(program.getUniform("texture1"), 0);
-	glUniform1i(program.getUniform("texture2"), 1);
+    glUniform1i(program.getUniform("texture1"), 0);
+    glUniform1i(program.getUniform("texture2"), 1);
 
+    // ------------- Create textures ------------------------------
 
-	// ------------- Create textures ------------------------------
+    GL::Texture tex1(texData1, 4, 4, GL_RGB, false, false);
+    GL::Texture tex2(texData2, 4, 4, GL_RGB, false, false);
+    vao.unbind();
 
-	GL::Texture tex1(texData1, 4, 4, GL_RGB, false, false);
-	GL::Texture tex2(texData2, 4, 4, GL_RGB, false, false);
-	vao.unbind();
+    bool running = true;
+    while (running) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            }
+        }
 
-	bool running = true;
-	while (running) {
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
-				running = false;
-			}
-		}
+        glClearColor(.5, 1, 0, 1);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		glClearColor(.5, 1, 0, 1);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        vao.bind();
+        program.use();
 
-		vao.bind();
-		program.use();
+        glActiveTexture(GL_TEXTURE0);
+        tex1.bind();
+        glActiveTexture(GL_TEXTURE1);
+        tex2.bind();
 
-		glActiveTexture(GL_TEXTURE0);
-		tex1.bind();
-		glActiveTexture(GL_TEXTURE1);
-		tex2.bind();
+        glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 
-		glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+        window.swap();
+    }
 
-		window.swap();
-	}
-
-	cout << "finished" << endl;
-	return 0;
+    cout << "finished" << endl;
+    return 0;
 }
-
-
-

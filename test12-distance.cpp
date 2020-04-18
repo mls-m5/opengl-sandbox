@@ -5,13 +5,12 @@
  *      Author: Mattias Larsson Sköld
  */
 
-
 #include <iostream>
 
-#include "matgl.h"
+#include "matgui/matgl.h"
+#include "matgui/shaderprogram.h"
+#include "matgui/texture.h"
 #include "matsdl.h"
-#include "shaderprogram.h"
-#include <texture.h>
 
 using namespace std;
 
@@ -48,25 +47,28 @@ void main() {
 
 )_";
 
-}
+} // namespace shader
 
+namespace {
+
+// clang-format off
 std::vector<float> positions = {
-		-1,  1, 0,
-		 1,  1, 0,
-		 1, -1, 0,
-		-1, -1, 0,
+        -1,  1, 0,
+         1,  1, 0,
+         1, -1, 0,
+        -1, -1, 0,
 };
 
 std::vector<float> texCoords = {
-		0, 1,
-		1, 1,
-		1, 0,
-		0, 0,
+        0, 1,
+        1, 1,
+        1, 0,
+        0, 0,
 };
 
 std::vector<GLuint> indices = {
-		0, 1, 2,
-		0, 2, 3,
+        0, 1, 2,
+        0, 2, 3,
 };
 
 #define on 255, 255, 255
@@ -76,129 +78,131 @@ std::vector<GLuint> indices = {
 #define of 0, 0, 0
 
 vector <unsigned char> texData1 = {
-		bl, of, bl, of,
-		bl, of, bl, of,
-		of, bl, of, bl,
-		of, bl, of, bl,
+        bl, of, bl, of,
+        bl, of, bl, of,
+        of, bl, of, bl,
+        of, bl, of, bl,
 };
 
 vector <unsigned char> texData2 = {
-		re, of, re, of,
-		of, re, of, re,
-		re, of, re, of,
-		of, re, of, re,
+        re, of, re, of,
+        of, re, of, re,
+        re, of, re, of,
+        of, re, of, re,
 };
 
 #undef on
 #undef of
 
+// clang-format on
+
+} // namespace
+
 using namespace GL;
 
-int main(int argc, char **argv) {
-	cout << "started..." << endl;
-	int width = 800;
-	int heigth = 600;
-	SDL::Window window(
-			"Hej",
-			SDL_WINDOWPOS_UNDEFINED,
-			SDL_WINDOWPOS_UNDEFINED,
-			width,
-			heigth,
-			SDL_WINDOW_OPENGL
-	);
+int main(int /*argc*/, char ** /*argv*/) {
+    cout << "started..." << endl;
+    int width = 800;
+    int heigth = 600;
+    SDL::Window window("Hej",
+                       SDL_WINDOWPOS_UNDEFINED,
+                       SDL_WINDOWPOS_UNDEFINED,
+                       width,
+                       heigth,
+                       SDL_WINDOW_OPENGL);
 
-	SDL::GLContext context(window);
+    SDL::GLContext context(window);
 
-	ShaderProgram program(shader::vertex, shader::fragment);
+    ShaderProgram program(shader::vertex, shader::fragment);
 
-	GL::VertexArrayObject vao;
-	program.use();
+    GL::VertexArrayObject vao;
+    program.use();
 
-	GL::VertexBufferObject vboPos(positions, 0, 3);
-	GL::VertexBufferObject vboTex(texCoords, 1, 2);
-	GL::VertexBufferObject vboInd(indices);
+    GL::VertexBufferObject vboPos(positions, 0, 3);
+    GL::VertexBufferObject vboTex(texCoords, 1, 2);
+    GL::VertexBufferObject vboInd(indices);
 
-	glUniform1i(program.getUniform("texture1"), 0);
+    glUniform1i(program.getUniform("texture1"), 0);
 
+    // ------------- Create textures ------------------------------
 
-	// ------------- Create textures ------------------------------
+    //	GL::Texture tex1(texData1, 4, 4, GL_RGB, false, false);
 
-//	GL::Texture tex1(texData1, 4, 4, GL_RGB, false, false);
+    int texWidth = 500, texHeight = 500;
+    vector<unsigned char> pixels(texWidth * texHeight * 3);
 
-	int texWidth = 500, texHeight = 500;
-	vector<unsigned char> pixels(texWidth * texHeight * 3);
+    for (auto &p : pixels) {
+        p = 0;
+    }
 
-	for (auto &p: pixels) {
-		p = 0;
-	}
+    unsigned char outside = 0;
 
-	unsigned char outside = 0;
+    auto getPixel = [&](int x, int y) -> unsigned char & {
+        if (x < 0 || x >= texWidth || y < 0 || y >= texHeight) {
+            return outside;
+        }
+        int i = (x + y * texWidth) * 3;
+        return pixels[i];
+    };
 
-	auto getPixel = [&] (int x, int y) -> unsigned char & {
-		if (x < 0 || x >= texWidth || y < 0 || y >= texHeight) {
-			return outside;
-		}
-		int i = (x + y * texWidth) * 3;
-		return pixels[i];
-	};
+    for (int x = 30; x < 100; ++x)
+        for (int y = 50; y < 100; ++y) {
+            int i = (x + y * texWidth) * 3;
+            pixels[i] = 255;
+            pixels[i + 1] = 255;
+            pixels[i + 2] = 255;
+        }
 
-	for (int x = 30; x < 100; ++x) for (int y = 50; y < 100; ++y) {
-		int i = (x + y * texWidth) * 3;
-		pixels[i] = 255;
-		pixels[i + 1] = 255;
-		pixels[i + 2] = 255;
-	}
+    auto max = [](unsigned char c1, unsigned char c2) {
+        return (c1 > c2) ? c1 : c2;
+    };
+    auto subtract = [](unsigned char c) { return (c > 0) ? c - 1 : 0; };
 
-	auto max = [](unsigned char c1, unsigned char c2) { return (c1 > c2)? c1: c2; };
-	auto subtract = [](unsigned char c) { return (c > 0) ? c-1: 0; };
+    for (int x = 0; x < texWidth; ++x)
+        for (int y = 0; y < texHeight; ++y) {
+            unsigned char &p = getPixel(x, y);
+            p = max(p, subtract(getPixel(x - 1, y)));
+            //		p = max(p, subtract(getPixel(x - 1, y - 1)));
+            p = max(p, subtract(getPixel(x, y - 1)));
+        }
 
-	for (int x = 0; x < texWidth; ++x) for (int y = 0; y < texHeight; ++y) {
-		unsigned char &p = getPixel(x, y);
-		p = max(p, subtract(getPixel(x - 1, y)));
-//		p = max(p, subtract(getPixel(x - 1, y - 1)));
-		p = max(p, subtract(getPixel(x, y - 1)));
-	}
+    for (int x = texWidth - 1; x > 0; --x)
+        for (int y = texHeight - 1; y > 0; --y) {
+            unsigned char &p = getPixel(x, y);
+            p = max(p, subtract(getPixel(x + 1, y)));
+            //		p = max(p, subtract(getPixel(x + 1, y + 1)));
+            p = max(p, subtract(getPixel(x, y + 1)));
+        }
 
-	for (int x = texWidth - 1; x > 0; --x) for (int y = texHeight -1; y > 0; --y) {
-		unsigned char &p = getPixel(x, y);
-		p = max(p, subtract(getPixel(x + 1, y)));
-//		p = max(p, subtract(getPixel(x + 1, y + 1)));
-		p = max(p, subtract(getPixel(x, y + 1)));
-	}
+    GL::Texture tex1; //(texData1, 4, 4, GL_RGB, false, false);
+    tex1.setData(pixels, texWidth, texHeight);
+    tex1.setParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    tex1.setParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    vao.unbind();
 
+    bool running = true;
+    while (running) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            }
+        }
 
-	GL::Texture tex1;//(texData1, 4, 4, GL_RGB, false, false);
-	tex1.setData(pixels, texWidth, texHeight);
-	tex1.setParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	tex1.setParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	vao.unbind();
+        glClearColor(.5, 1, 0, 1);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-	bool running = true;
-	while (running) {
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
-				running = false;
-			}
-		}
+        vao.bind();
+        program.use();
 
-		glClearColor(.5, 1, 0, 1);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        glActiveTexture(GL_TEXTURE0);
+        tex1.bind();
 
-		vao.bind();
-		program.use();
+        glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 
-		glActiveTexture(GL_TEXTURE0);
-		tex1.bind();
+        window.swap();
+    }
 
-		glCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-
-		window.swap();
-	}
-
-	cout << "finished" << endl;
-	return 0;
+    cout << "finished" << endl;
+    return 0;
 }
-
-
-
