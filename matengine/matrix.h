@@ -653,7 +653,7 @@ public:
     // Notice the format
     // The rows below is what is usually
     // columns in mathematical examples
-    // for examel x4, y4 and z4 is used for translation
+    // for exampel x4, y4 and z4 is used for translation
     // and x1 to x3 is used to describe the x-axis
 
     T x1 = 1, y1 = 0, z1 = 0, w1 = 0;
