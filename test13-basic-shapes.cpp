@@ -37,11 +37,11 @@ const std::string vertex =
 
         out vec3 fNormal;
 
-        uniform mat4 uModel;
+        uniform mat4 uMVP;
 
         void main() {
-            gl_Position = uModel * vPosition;
-            gl_Position.w = 1 + gl_Position.z / 2.;
+            gl_Position = uMVP * vPosition;
+//            gl_Position.w = 1 + gl_Position.z / 2.;
             fNormal = vPosition.xyz; // Test
         }
 )_";
@@ -99,7 +99,7 @@ Mesh createCylinderVertices() {
 
     mesh.vertices.emplace_back(0, 0, 1);
 
-    const unsigned firstCircle1 = 1;
+    const unsigned firstCirtartle1 = 1;
 
     for (size_t i = 0; i < numPoints; ++i) {
         auto angle = pi2 / numPoints * i;
@@ -117,13 +117,13 @@ Mesh createCylinderVertices() {
 
     for (unsigned i = 1; i < numPoints; ++i) {
         mesh.indices.push_back(0);
-        mesh.indices.push_back(firstCircle1 + i);
-        mesh.indices.push_back(firstCircle1 + i - 1);
+        mesh.indices.push_back(firstCirtartle1 + i);
+        mesh.indices.push_back(firstCirtartle1 + i - 1);
     }
 
     mesh.indices.push_back(0);
-    mesh.indices.push_back(firstCircle1);
-    mesh.indices.push_back(firstCircle1 + numPoints - 1);
+    mesh.indices.push_back(firstCirtartle1);
+    mesh.indices.push_back(firstCirtartle1 + numPoints - 1);
 
     for (unsigned i = 1; i < numPoints; ++i) {
         mesh.indices.push_back(center2);
@@ -137,15 +137,15 @@ Mesh createCylinderVertices() {
 
     // ---- Walls -------
 
-    unsigned wallStart = mesh.vertices.size();
+    unsigned wallStart = static_cast<unsigned>(mesh.vertices.size());
 
-    for (int i = 0; i < numPoints; ++i) {
+    for (unsigned int i = 0; i < numPoints; ++i) {
         auto angle = pi2 / numPoints * i;
         mesh.vertices.emplace_back(sin(angle), cos(angle), 1);
         mesh.vertices.emplace_back(sin(angle), cos(angle), -1);
     }
 
-    for (int i = 1; i < numPoints; ++i) {
+    for (unsigned i = 1; i < numPoints; ++i) {
         mesh.indices.push_back(wallStart + i * 2);
         mesh.indices.push_back(wallStart + i * 2 + 1);
         mesh.indices.push_back(wallStart + (i - 1) * 2 + 1);
@@ -162,6 +162,48 @@ Mesh createCylinderVertices() {
     mesh.indices.push_back(wallStart);
     mesh.indices.push_back(wallStart + (numPoints - 1) * 2);
     mesh.indices.push_back(wallStart + (numPoints - 1) * 2 + 1);
+
+    return mesh;
+}
+
+Mesh createBoxVertices() {
+    Mesh mesh;
+
+    auto &vertices = mesh.vertices;
+    auto &indices = mesh.indices;
+
+    for (auto i : {1, -1}) {
+        const auto start = static_cast<unsigned>(vertices.size());
+        vertices.emplace_back(-1, -1, i);
+        vertices.emplace_back(1, -1, i);
+        vertices.emplace_back(1, 1, i);
+        vertices.emplace_back(-1, 1, i);
+
+        indices.insert(indices.begin(), {start, start + 1, start + 2});
+        indices.insert(indices.begin(), {start, start + 2, start + 3});
+    }
+
+    for (auto i : {1, -1}) {
+        const auto start = static_cast<unsigned>(vertices.size());
+        vertices.emplace_back(-1, i, -1);
+        vertices.emplace_back(1, i, -1);
+        vertices.emplace_back(1, i, 1);
+        vertices.emplace_back(-1, i, 1);
+
+        indices.insert(indices.begin(), {start, start + 1, start + 2});
+        indices.insert(indices.begin(), {start, start + 2, start + 3});
+    }
+
+    for (auto i : {1, -1}) {
+        const auto start = static_cast<unsigned>(vertices.size());
+        vertices.emplace_back(i, -1, -1);
+        vertices.emplace_back(i, 1, -1);
+        vertices.emplace_back(i, 1, 1);
+        vertices.emplace_back(i, -1, 1);
+
+        indices.insert(indices.begin(), {start, start + 1, start + 2});
+        indices.insert(indices.begin(), {start, start + 2, start + 3});
+    }
 
     return mesh;
 }
@@ -188,7 +230,6 @@ int main(int /*argc*/, char ** /*argv*/) {
 
     GL::VertexBufferObject vboPos(
         &vTestPositions.front().x, vTestPositions.size() * 4, 0, 4);
-    //    GL::VertexBufferObject vboPos(testPositions, 0, 4);
 
     GL::VertexBufferObject vboNormals(testPositions, 1, 3);
     GL::VertexBufferObject vboIndices(testIndices);
@@ -197,30 +238,45 @@ int main(int /*argc*/, char ** /*argv*/) {
 
     // ------------------ Create cylinder ---------------------------
 
-    auto face = createCylinderVertices();
+    auto cylMesh = createCylinderVertices();
 
     GL::VertexArrayObject cylVao;
 
     program.use();
 
     GL::VertexBufferObject cylVboPos(
-        &face.vertices.front().x, face.vertices.size() * 4, 0, 4);
+        &cylMesh.vertices.front().x, cylMesh.vertices.size() * 4, 0, 4);
     vboNormals.bind(); // Reuse this
-    GL::VertexBufferObject cylIndices(face.indices);
+    GL::VertexBufferObject cylIndices(cylMesh.indices);
 
     cylVao.unbind();
 
-    auto modelTransform = Matrixf::Scale(.5, .5);
+    // ----------------- Cube --------------------------------------
+
+    auto boxMesh = createBoxVertices();
+
+    GL::VertexArrayObject boxVao;
+
+    program.use();
+
+    GL::VertexBufferObject boxPos(
+        &boxMesh.vertices.front().x, boxMesh.vertices.size() * 4, 0, 4);
+
+    GL::VertexBufferObject boxIndices(boxMesh.indices);
+
+    boxVao.unbind();
+
+    // ----------------- Transform ---------------------------------
 
     GLint modelUniform;
 
-    glCall(modelUniform = program.getUniform("uModel"));
-    glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
+    glCall(modelUniform = program.getUniform("uMVP"));
+    //    glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
 
     // -------------------------------------------------------------
 
     bool running = true;
-    float angle = 0;
+    double angle = 0;
 
     while (running) {
         SDL_Event event;
@@ -242,17 +298,41 @@ int main(int /*argc*/, char ** /*argv*/) {
         angle += .01;
 
         auto projectionMatrix = Matrixf::Identity();
-        modelTransform.w3 = .5f;
-        modelTransform =
-            projectionMatrix * Matrixf::Scale(.5) * Matrixf::RotationY(angle);
-        glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
+        projectionMatrix.w3 = .5f;
 
         glEnable(GL_DEPTH_TEST);
 
-        cylVao.bind();
-        program.use();
-        glCall(glDrawElements(
-            GL_TRIANGLES, face.indices.size(), GL_UNSIGNED_INT, nullptr));
+        const bool drawCylinder = true;
+
+        if (drawCylinder) {
+            auto modelTransform = projectionMatrix * Matrixf::Scale(.2f) *
+                                  Matrixf::RotationY(angle) *
+                                  Matrixf::RotationZ(angle / 3.);
+            cylVao.bind();
+            program.use();
+            glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
+            glCall(glDrawElements(GL_TRIANGLES,
+                                  static_cast<int>(cylMesh.indices.size()),
+                                  GL_UNSIGNED_INT,
+                                  nullptr));
+        }
+
+        const bool drawBox = true;
+
+        if (drawBox) {
+            auto modelTransform =
+                projectionMatrix * Matrixf::Translation(-.4f, 0) *
+                Matrixf::Scale(.2f) * Matrixf::RotationY(angle) *
+                Matrixf::RotationZ(angle / 3.);
+
+            boxVao.bind();
+            program.use();
+            glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
+            glCall(glDrawElements(GL_TRIANGLES,
+                                  static_cast<int>(boxMesh.indices.size()),
+                                  GL_UNSIGNED_INT,
+                                  nullptr));
+        }
 
         window.swap();
     }
