@@ -97,71 +97,58 @@ Mesh createCylinderVertices() {
 
     Mesh mesh;
 
-    mesh.vertices.emplace_back(0, 0, 1);
+    auto &vertices = mesh.vertices;
+    auto &indices = mesh.indices;
 
-    const unsigned firstCirtartle1 = 1;
+    for (auto z : {1, -1}) {
+        const unsigned circleStart = static_cast<unsigned>(vertices.size()) + 1;
+        vertices.emplace_back(0, 0, z);
 
-    for (size_t i = 0; i < numPoints; ++i) {
-        auto angle = pi2 / numPoints * i;
-        mesh.vertices.emplace_back(sin(angle), cos(angle), 1);
+        for (size_t i = 0; i < numPoints; ++i) {
+            auto angle = pi2 / numPoints * i;
+            vertices.emplace_back(sin(angle), cos(angle), z);
+        }
+
+        for (unsigned i = 1; i < numPoints; ++i) {
+            indices.push_back(circleStart);
+            indices.push_back(circleStart + i);
+            indices.push_back(circleStart + i - 1);
+        }
+
+        indices.push_back(0);
+        indices.push_back(circleStart);
+        indices.push_back(circleStart + numPoints - 1);
     }
-
-    mesh.vertices.emplace_back(0, 0, -1);
-    const unsigned center2 = static_cast<unsigned>(mesh.vertices.size() - 1);
-    const unsigned firstCircle2 = center2 + 1;
-
-    for (size_t i = 0; i < numPoints; ++i) {
-        auto angle = pi2 / numPoints * i;
-        mesh.vertices.emplace_back(sin(angle), cos(angle), -1);
-    }
-
-    for (unsigned i = 1; i < numPoints; ++i) {
-        mesh.indices.push_back(0);
-        mesh.indices.push_back(firstCirtartle1 + i);
-        mesh.indices.push_back(firstCirtartle1 + i - 1);
-    }
-
-    mesh.indices.push_back(0);
-    mesh.indices.push_back(firstCirtartle1);
-    mesh.indices.push_back(firstCirtartle1 + numPoints - 1);
-
-    for (unsigned i = 1; i < numPoints; ++i) {
-        mesh.indices.push_back(center2);
-        mesh.indices.push_back(firstCircle2 + i);
-        mesh.indices.push_back(firstCircle2 + i - 1);
-    }
-
-    mesh.indices.push_back(center2);
-    mesh.indices.push_back(firstCircle2);
-    mesh.indices.push_back(firstCircle2 + numPoints - 1);
 
     // ---- Walls -------
 
-    unsigned wallStart = static_cast<unsigned>(mesh.vertices.size());
+    unsigned wallStart = static_cast<unsigned>(vertices.size());
 
     for (unsigned int i = 0; i < numPoints; ++i) {
         auto angle = pi2 / numPoints * i;
-        mesh.vertices.emplace_back(sin(angle), cos(angle), 1);
-        mesh.vertices.emplace_back(sin(angle), cos(angle), -1);
+        auto s = sin(angle);
+        auto c = cos(angle);
+        vertices.emplace_back(s, c, 1);
+        vertices.emplace_back(s, c, -1);
     }
 
     for (unsigned i = 1; i < numPoints; ++i) {
-        mesh.indices.push_back(wallStart + i * 2);
-        mesh.indices.push_back(wallStart + i * 2 + 1);
-        mesh.indices.push_back(wallStart + (i - 1) * 2 + 1);
+        indices.push_back(wallStart + i * 2);
+        indices.push_back(wallStart + i * 2 + 1);
+        indices.push_back(wallStart + (i - 1) * 2 + 1);
 
-        mesh.indices.push_back(wallStart + i * 2);
-        mesh.indices.push_back(wallStart + (i - 1) * 2);
-        mesh.indices.push_back(wallStart + (i - 1) * 2 + 1);
+        indices.push_back(wallStart + i * 2);
+        indices.push_back(wallStart + (i - 1) * 2);
+        indices.push_back(wallStart + (i - 1) * 2 + 1);
     }
 
-    mesh.indices.push_back(wallStart);
-    mesh.indices.push_back(wallStart + 1);
-    mesh.indices.push_back(wallStart + (numPoints - 1) * 2 + 1);
+    indices.push_back(wallStart);
+    indices.push_back(wallStart + 1);
+    indices.push_back(wallStart + (numPoints - 1) * 2 + 1);
 
-    mesh.indices.push_back(wallStart);
-    mesh.indices.push_back(wallStart + (numPoints - 1) * 2);
-    mesh.indices.push_back(wallStart + (numPoints - 1) * 2 + 1);
+    indices.push_back(wallStart);
+    indices.push_back(wallStart + (numPoints - 1) * 2);
+    indices.push_back(wallStart + (numPoints - 1) * 2 + 1);
 
     return mesh;
 }
