@@ -19,13 +19,27 @@ struct vec4 {
     }
 };
 
-struct Mesh {
-    std::vector<vec4> vertices;
-    std::vector<unsigned> indices;
+struct Vertex {
+    vec4 pos;
+    vec4 normal;
+
+    Vertex() = default;
+    Vertex(const Vertex &) = default;
+    Vertex &operator=(const Vertex &) = default;
+
+    //    Vertex(float x, float y, float z, float nx = 0, float ny = 0, float nz
+    //    = 0)
+    //        : pos(x, y, z), normal(nx, ny, nz) {
+    //    }
+
+    Vertex(decltype(pos) pos, decltype(normal) normal = {})
+        : pos(pos), normal(normal) {
+    }
 };
 
-struct vec3 {
-    float x = 0, y = 0, z = 0;
+struct Mesh {
+    std::vector<Vertex> vertices;
+    std::vector<unsigned> indices;
 };
 
 const std::string vertex =
@@ -42,7 +56,8 @@ const std::string vertex =
         void main() {
             gl_Position = uMVP * vPosition;
 //            gl_Position.w = 1 + gl_Position.z / 2.;
-            fNormal = vPosition.xyz; // Test
+//            fNormal = vPosition.xyz; // Test
+            fNormal = vNormal;
         }
 )_";
 
@@ -57,7 +72,7 @@ const std::string fragment =
         void main() {
 //            fragColor = vec4(1, 1, 1, 1);
 //            if (fNormal.z > 1) {
-                fragColor = vec4(1,.5 + fNormal.z / 2,1,1);
+                fragColor = vec4(1,.5 + fNormal.y / 2,1,1);
 //            }
 //            else {
 //                fragColor = vec4(1,1,.5,1);
@@ -100,13 +115,15 @@ Mesh createCylinderVertices() {
     auto &vertices = mesh.vertices;
     auto &indices = mesh.indices;
 
-    for (auto z : {1, -1}) {
+    for (float z : {1, -1}) {
         const unsigned circleStart = static_cast<unsigned>(vertices.size()) + 1;
-        vertices.emplace_back(0, 0, z);
+
+        auto n = vec4{0, 0, z};
+        vertices.push_back({{0, 0, z}, n});
 
         for (size_t i = 0; i < numPoints; ++i) {
-            auto angle = pi2 / numPoints * i;
-            vertices.emplace_back(sin(angle), cos(angle), z);
+            auto angle = pi2f / numPoints * i;
+            vertices.push_back({{sinf(angle), cosf(angle), z}, n});
         }
 
         for (unsigned i = 1; i < numPoints; ++i) {
@@ -125,11 +142,12 @@ Mesh createCylinderVertices() {
     unsigned wallStart = static_cast<unsigned>(vertices.size());
 
     for (unsigned int i = 0; i < numPoints; ++i) {
-        auto angle = pi2 / numPoints * i;
-        auto s = sin(angle);
-        auto c = cos(angle);
-        vertices.emplace_back(s, c, 1);
-        vertices.emplace_back(s, c, -1);
+        auto angle = pi2f / numPoints * i;
+        auto s = sinf(angle);
+        auto c = cosf(angle);
+        auto n = vec4{s, c};
+        vertices.push_back({{s, c, 1}, n});
+        vertices.push_back({{s, c, -1}, n});
     }
 
     for (unsigned i = 1; i < numPoints; ++i) {
@@ -159,34 +177,37 @@ Mesh createBoxVertices() {
     auto &vertices = mesh.vertices;
     auto &indices = mesh.indices;
 
-    for (auto i : {1, -1}) {
+    for (float i : {1, -1}) {
         const auto start = static_cast<unsigned>(vertices.size());
-        vertices.emplace_back(-1, -1, i);
-        vertices.emplace_back(1, -1, i);
-        vertices.emplace_back(1, 1, i);
-        vertices.emplace_back(-1, 1, i);
+        vec4 n = {0, 0, i};
+        vertices.emplace_back(vec4{-1, -1, i}, n);
+        vertices.emplace_back(vec4{1, -1, i}, n);
+        vertices.emplace_back(vec4{1, 1, i}, n);
+        vertices.emplace_back(vec4{-1, 1, i}, n);
 
         indices.insert(indices.begin(), {start, start + 1, start + 2});
         indices.insert(indices.begin(), {start, start + 2, start + 3});
     }
 
-    for (auto i : {1, -1}) {
+    for (float i : {1, -1}) {
         const auto start = static_cast<unsigned>(vertices.size());
-        vertices.emplace_back(-1, i, -1);
-        vertices.emplace_back(1, i, -1);
-        vertices.emplace_back(1, i, 1);
-        vertices.emplace_back(-1, i, 1);
+        vec4 n = {0, i, 0};
+        vertices.emplace_back(vec4{-1, i, -1}, n);
+        vertices.emplace_back(vec4{1, i, -1}, n);
+        vertices.emplace_back(vec4{1, i, 1}, n);
+        vertices.emplace_back(vec4{-1, i, 1}, n);
 
         indices.insert(indices.begin(), {start, start + 1, start + 2});
         indices.insert(indices.begin(), {start, start + 2, start + 3});
     }
 
-    for (auto i : {1, -1}) {
+    for (float i : {1, -1}) {
         const auto start = static_cast<unsigned>(vertices.size());
-        vertices.emplace_back(i, -1, -1);
-        vertices.emplace_back(i, 1, -1);
-        vertices.emplace_back(i, 1, 1);
-        vertices.emplace_back(i, -1, 1);
+        vec4 n = {i, 0, 0};
+        vertices.emplace_back(vec4{i, -1, -1}, n);
+        vertices.emplace_back(vec4{i, 1, -1}, n);
+        vertices.emplace_back(vec4{i, 1, 1}, n);
+        vertices.emplace_back(vec4{i, -1, 1}, n);
 
         indices.insert(indices.begin(), {start, start + 1, start + 2});
         indices.insert(indices.begin(), {start, start + 2, start + 3});
@@ -223,7 +244,8 @@ int main(int /*argc*/, char ** /*argv*/) {
 
     vao.unbind();
 
-    // ------------------ Create cylinder ---------------------------
+    // ------------------ Create cylinder
+    // ---------------------------
 
     auto cylMesh = createCylinderVertices();
 
@@ -231,14 +253,24 @@ int main(int /*argc*/, char ** /*argv*/) {
 
     program.use();
 
-    GL::VertexBufferObject cylVboPos(
-        &cylMesh.vertices.front().x, cylMesh.vertices.size() * 4, 0, 4);
-    vboNormals.bind(); // Reuse this
+    GL::VertexBufferObject cylVboPos(&cylMesh.vertices.front().pos.x,
+                                     cylMesh.vertices.size() * 4 * 2,
+                                     0,
+                                     4,
+                                     8 * sizeof(float));
+
+    GL::VertexBufferObject cylVboNormals(&cylMesh.vertices.front().normal.x,
+                                         cylMesh.vertices.size() * 4 * 2,
+                                         1,
+                                         4,
+                                         8 * sizeof(float));
+
     GL::VertexBufferObject cylIndices(cylMesh.indices);
 
     cylVao.unbind();
 
-    // ----------------- Cube --------------------------------------
+    // ----------------- Cube
+    // --------------------------------------
 
     auto boxMesh = createBoxVertices();
 
@@ -246,19 +278,30 @@ int main(int /*argc*/, char ** /*argv*/) {
 
     program.use();
 
-    GL::VertexBufferObject boxPos(
-        &boxMesh.vertices.front().x, boxMesh.vertices.size() * 4, 0, 4);
+    GL::VertexBufferObject boxPos(&boxMesh.vertices.front().pos.x,
+                                  boxMesh.vertices.size() * 4 * 2,
+                                  0,
+                                  4,
+                                  8 * sizeof(float));
+
+    GL::VertexBufferObject boxNormals(&boxMesh.vertices.front().normal.x,
+                                      boxMesh.vertices.size() * 4 * 2,
+                                      1,
+                                      4,
+                                      8 * sizeof(float));
 
     GL::VertexBufferObject boxIndices(boxMesh.indices);
 
     boxVao.unbind();
 
-    // ----------------- Transform ---------------------------------
+    // ----------------- Transform
+    // ---------------------------------
 
     GLint modelUniform;
 
     glCall(modelUniform = program.getUniform("uMVP"));
-    //    glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
+    //    glUniformMatrix4fv(modelUniform, 1, false,
+    //    modelTransform);
 
     // -------------------------------------------------------------
 
