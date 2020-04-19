@@ -27,11 +27,6 @@ struct Vertex {
     Vertex(const Vertex &) = default;
     Vertex &operator=(const Vertex &) = default;
 
-    //    Vertex(float x, float y, float z, float nx = 0, float ny = 0, float nz
-    //    = 0)
-    //        : pos(x, y, z), normal(nx, ny, nz) {
-    //    }
-
     Vertex(decltype(pos) pos, decltype(normal) normal = {})
         : pos(pos), normal(normal) {
     }
@@ -52,12 +47,11 @@ const std::string vertex =
         out vec3 fNormal;
 
         uniform mat4 uMVP;
+        uniform mat4 uMV;
 
         void main() {
             gl_Position = uMVP * vPosition;
-//            gl_Position.w = 1 + gl_Position.z / 2.;
-//            fNormal = vPosition.xyz; // Test
-            fNormal = vNormal;
+            fNormal = normalize(mat3(uMV) * vNormal);
         }
 )_";
 
@@ -70,13 +64,8 @@ const std::string fragment =
         out vec4 fragColor;
 
         void main() {
-//            fragColor = vec4(1, 1, 1, 1);
-//            if (fNormal.z > 1) {
-                fragColor = vec4(1,.5 + fNormal.y / 2,1,1);
-//            }
-//            else {
-//                fragColor = vec4(1,1,.5,1);
-//            }
+            float intensity = .5 + fNormal.y / 2;
+            fragColor = vec4(intensity, intensity, intensity, 1);
         }
 
         )_";
@@ -297,11 +286,10 @@ int main(int /*argc*/, char ** /*argv*/) {
     // ----------------- Transform
     // ---------------------------------
 
-    GLint modelUniform;
+    GLint MVPuniform, MVuniform;
 
-    glCall(modelUniform = program.getUniform("uMVP"));
-    //    glUniformMatrix4fv(modelUniform, 1, false,
-    //    modelTransform);
+    glCall(MVPuniform = program.getUniform("uMVP"));
+    glCall(MVuniform = program.getUniform("uMV"));
 
     // -------------------------------------------------------------
 
@@ -335,12 +323,15 @@ int main(int /*argc*/, char ** /*argv*/) {
         const bool drawCylinder = true;
 
         if (drawCylinder) {
-            auto modelTransform = projectionMatrix * Matrixf::Scale(.2f) *
-                                  Matrixf::RotationY(angle) *
-                                  Matrixf::RotationZ(angle / 3.);
+            auto mvTransform = projectionMatrix * Matrixf::Scale(.2f) *
+                               Matrixf::RotationY(angle) *
+                               Matrixf::RotationZ(angle / 3.);
+            auto mvpTransform = projectionMatrix * mvTransform;
             cylVao.bind();
             program.use();
-            glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
+
+            glUniformMatrix4fv(MVPuniform, 1, false, mvpTransform);
+            glUniformMatrix4fv(MVuniform, 1, false, mvTransform);
             glCall(glDrawElements(GL_TRIANGLES,
                                   static_cast<int>(cylMesh.indices.size()),
                                   GL_UNSIGNED_INT,
@@ -350,14 +341,16 @@ int main(int /*argc*/, char ** /*argv*/) {
         const bool drawBox = true;
 
         if (drawBox) {
-            auto modelTransform =
-                projectionMatrix * Matrixf::Translation(-.4f, 0) *
-                Matrixf::Scale(.2f) * Matrixf::RotationY(angle) *
-                Matrixf::RotationZ(angle / 3.);
+            auto mvTransform = projectionMatrix *
+                               Matrixf::Translation(-.4f, 0) *
+                               Matrixf::Scale(.2f) * Matrixf::RotationY(angle) *
+                               Matrixf::RotationZ(angle / 3.);
+            auto mvpTransform = projectionMatrix * mvTransform;
 
             boxVao.bind();
             program.use();
-            glUniformMatrix4fv(modelUniform, 1, false, modelTransform);
+            glUniformMatrix4fv(MVPuniform, 1, false, mvpTransform);
+            glUniformMatrix4fv(MVuniform, 1, false, mvTransform);
             glCall(glDrawElements(GL_TRIANGLES,
                                   static_cast<int>(boxMesh.indices.size()),
                                   GL_UNSIGNED_INT,
